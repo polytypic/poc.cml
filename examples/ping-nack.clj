@@ -27,14 +27,12 @@
               ;; Wait for 1000ms or nack.
               already-nack
                 (sync!
-                  (choose
-                    nack
-                    (wrap (timeout 1000) (fn [_] false))))]
+                  nack
+                  (wrap (timeout 1000) (fn [_] false)))]
           ;; Then try to reply or cancel via nack.
           (sync!
-            (choose
-              (wrap nack (fn [_] (println "nack") true))
-              (wrap [reply-ch "pong"] (fn [_] (println "put"))))))
+            (wrap nack (fn [_] (println "nack") true))
+            (wrap [reply-ch "pong"] (fn [_] (println "put")))))
         (recur)))
 
     ;; The client side event definition.
@@ -49,13 +47,11 @@
 ;; First we try to get a ping within 500ms.
 (println
   (<!! (go-sync!
-         (choose
-           ping
-           (wrap (timeout 500) (fn [_] "timeout 500"))))))
+         ping
+         (wrap (timeout 500) (fn [_] "timeout 500")))))
 
 ;; Then we try to get a ping within 1500ms.
 (println
   (<!! (go-sync!
-         (choose
-           ping
-           (wrap (timeout 1500) (fn [_] "timeout 1500"))))))
+         ping
+         (wrap (timeout 1500) (fn [_] "timeout 1500")))))

@@ -46,7 +46,7 @@
         up (count port->op)]
     [(conj nacks [lo up nE]) port->op]))
 
-(defn- get-prim [op] (match op [_ _ prim] prim))
+(defn- op->prim [[_ _ prim]] prim)
 
 (defn- inst [wrappers all xE]
   (match xE
@@ -78,7 +78,8 @@
 (defn choose
   "Creates an event that is instantiated by instantiating all the given events
   and synchronized by non-deterministically synchronizing one of them."
-  ([& xEs] [:choose xEs]))
+  ([xE] xE)
+  ([xE & xEs] [:choose (apply vector xE xEs)]))
 
 (defn wrap
   "Creates an event that is instantiated and synchronized like the given event
@@ -100,17 +101,18 @@
   ([nE->xE] [:with-nack nE->xE]))
 
 (defn go-sync!
-  "Starts a go block inside of which the given event is instantiated and
-  synchronized."
+  "Starts a go block inside of which the given events are instantiated and
+  non-deterministically at most one of them is synchronized."
   ([xE] (go (let [[nacks port->op] (instantiate xE)
-                  [result port] (alts! (map get-prim (vals port->op)))
+                  [result port] (alts! (map op->prim (vals port->op)))
                   [wrappers i _] (get port->op port)]
               (doseq [[lo up nE] nacks]
                 (when (or (< i lo) (<= up i))
                   (>!-forever nE :nack)))
-              (reduce #(%2 %1) result (rseq wrappers))))))
+              (reduce #(%2 %1) result (rseq wrappers)))))
+  ([xE & xEs] (go-sync! (apply choose xE xEs))))
 
 (defmacro sync!
-  "Instantiates and synchronizes on the given event.  This must be used inside a
-  `go` block."
-  ([xE] `(<! (go-sync! ~xE))))
+  "Instantiates the given events and non-deterministically synchronizes at most
+  one of them.  This must be used inside a `go` block."
+  ([xE & xEs] `(<! (go-sync! ~xE ~@xEs))))

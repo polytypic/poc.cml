@@ -51,10 +51,18 @@ combinators
 ```
 
 where `sync!` is an operation that synchronizes on a given event and returns its
-result.
+result.  For convenience, `sync!` is actually variadic and the `choose` call
+above can be removed:
+
+```clojure
+(sync!
+  (wrap <channel>           (fn [<result>] <action>))
+  (wrap [<channel> <value>] (fn [<sent>] <action>))
+    ...)
+```
 
 Written this way, the expression is obviously slightly more verbose, and we
-could certainly add a bit of sugar to make it more concise, but the key here is
+could certainly add further sugar to make it more concise, but the key here is
 that the combinators `choose`, `wrap`, `pute` and `gete` are just ordinary
 functions that return values that can be further manipulated with other
 combinators, stored in data structures and even passed through channels.
