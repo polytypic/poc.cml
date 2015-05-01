@@ -7,6 +7,33 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; There are two key differences between what is provided by core.async and
+;; what CML-style events provide:
+;;
+;; - core.async alts cannot be nested.
+;; - core.async does not provide negative acknowledgments.
+;;
+;; In this proof-of-concept implementation we express CML-events as trees.  See
+;; the match clause in the `inst` function below to get the idea.  Instantiation
+;; linearizes the tree of events into a `port->op` mapping of primitive
+;; operations.  Primitive operations are of the form `[wrappers i prim]` where
+;; `wrappers` are post synchronization actions, `i` is the linearized index of
+;; the op and `prim` is a primitive core.async operation, namely either a put
+;; `[xC x]` or a get `xC` operation.
+;;
+;; To implement negative acknowledgments, we keep a vector of nacks while we
+;; instantiate the tree of events.  Each nack is represented as `[lo up nC]`
+;; where `lo` and `up` are the lower and upper bound indices of linearized
+;; primitive operations corresponding to the event and `nC` is a channel that
+;; serves as the event.  After synchronizing on a primitive operation, the
+;; vector of nacks is processed and all nacks whose range is outside of the
+;; index of the chosen primitive event are enabled.
+;;
+;; Finally, after nacks have been enabled, the wrappers are executed to produce
+;; the final result.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn- add-op [[nacks port->op] port wrappers prim]
   (if (contains? port->op port)
     (throw
@@ -17,8 +44,8 @@
 
 (defn- add-nack [[_ port->op-before] [nacks port->op] nE]
   (let [lo (count port->op-before)
-        hi (count port->op)]
-    [(conj nacks [lo hi nE]) port->op]))
+        up (count port->op)]
+    [(conj nacks [lo up nE]) port->op]))
 
 (defn- get-prim [op]
   (match op [_ _ prim] prim))
@@ -83,8 +110,8 @@
       (let [[nacks port->op] (instantiate xE)
             [result port] (alts! (map get-prim (vals port->op)))
             [wrappers i _] (get port->op port)]
-        (doseq [[lo hi nE] nacks]
-          (when (or (< i lo) (<= hi i))
+        (doseq [[lo up nE] nacks]
+          (when (or (< i lo) (<= up i))
             (>!-forever nE i)))
         (reduce #(%2 %1) result (rseq wrappers))))))
 
