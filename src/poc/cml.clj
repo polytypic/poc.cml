@@ -54,12 +54,12 @@
 
 (defn choose
   "Creates an event that is instantiated by instantiating all the given events
-  and then non-deterministically synchronizing upon one of them."
+  and synchronized by non-deterministically synchronizing upon one of them."
   ([& xEs] [:choose xEs]))
 
 (defn wrap
   "Creates an event that is instantiated and synchronized like the given event
-  and then the result is passed through the given function."
+  after which the result is passed through the given function."
   ([xE x->y] [:wrap xE x->y]))
 
 (defn guard
