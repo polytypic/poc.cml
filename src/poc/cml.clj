@@ -9,32 +9,34 @@
 
 (defn- add-op [[nacks port->op] port wrappers prim]
   (if (contains? port->op port)
-    (throw (Exception. "Composable choice over duplicate ports is not enabled by core.async"))
+    (throw
+      (Exception.
+        "Composable choice over duplicate ports is not enabled by core.async"))
     [nacks
      (assoc port->op port [wrappers (count port->op) prim])]))
 
-(defn- add-nack [[_ port->op-before] [nacks port->op] nack]
+(defn- add-nack [[_ port->op-before] [nacks port->op] nE]
   (let [lo (count port->op-before)
         hi (count port->op)]
-    [(conj nacks [lo hi nack]) port->op]))
+    [(conj nacks [lo hi nE]) port->op]))
 
 (defn- get-prim [op]
   (match op [_ _ prim] prim))
 
 (defn- inst [wrappers all xE]
   (match xE
-    [:choose xEs]         (reduce (fn [all xE] (inst wrappers all xE)) all xEs)
-    [:wrap yE y->x]       (inst (conj wrappers y->x) all yE)
-    [:guard ->xE]         (inst wrappers all (->xE))
-    [:with-nack nack->xE] (let [nack (chan)]
-                            (add-nack all (inst wrappers all (nack->xE nack)) nack))
-    (:or [xC _] xC)       (add-op all xC wrappers xE)))
+    [:choose xEs]       (reduce (fn [all xE] (inst wrappers all xE)) all xEs)
+    [:wrap yE y->x]     (inst (conj wrappers y->x) all yE)
+    [:guard ->xE]       (inst wrappers all (->xE))
+    [:with-nack nE->xE] (let [nE (chan)]
+                          (add-nack all (inst wrappers all (nE->xE nE)) nE))
+    (:or [xC _] xC)     (add-op all xC wrappers xE)))
 
 (defn- instantiate [xE]
   (inst [] [[] {}] xE))
 
-(defn- >!-forever [ch x]
-  (go (loop [] (>! ch x) (recur))))
+(defn- >!-forever [xC x]
+  (go (loop [] (>! xC x) (recur))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -81,9 +83,9 @@
       (let [[nacks port->op] (instantiate xE)
             [result port] (alts! (map get-prim (vals port->op)))
             [wrappers i _] (get port->op port)]
-        (doseq [[lo hi nack] nacks]
+        (doseq [[lo hi nE] nacks]
           (when (or (< i lo) (<= hi i))
-            (>!-forever nack i)))
+            (>!-forever nE i)))
         (reduce #(%2 %1) result (rseq wrappers))))))
 
 (defmacro sync!
