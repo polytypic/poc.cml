@@ -41,19 +41,40 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pute
+  "Creates an event that is synchronized by giving a value on the specified
+  channel.  The result of the event is true if a value was given and false if
+  the channels was closed."
   ([xC x] [xC x]))
+
 (defn gete
+  "Creates an event that is synchronized by taking a value on the specified
+  channel.  The result of the event is the value taken."
   ([xC] xC))
+
 (defn choose
+  "Creates an event that is instantiated by instantiating all the given events
+  and then non-deterministically synchronizing upon one of them."
   ([& xEs] [:choose xEs]))
+
 (defn wrap
+  "Creates an event that is instantiated and synchronized like the given event
+  and then the result is then passed through the given function."
   ([xE x->y] [:wrap xE x->y]))
+
 (defn guard
+  "Creates an event that is instantiated by invoking the given thunk that
+  returns an event which is then instantiated and synchronized upon."
   ([->xE] [:guard ->xE]))
+
 (defn with-nack
+  "Creates an event that is instantiated by passing a new negative
+  acknowledgment event to the given function that return an event which is then
+  instantiated and synchronized upon."
   ([n->xE] [:with-nack n->xE]))
 
 (defn go-sync!
+  "Starts a go block inside of which the given event is instantiated and
+  synchronized upon."
   ([xE]
     (go
       (let [[nacks ops] (instantiate xE)
