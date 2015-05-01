@@ -54,6 +54,8 @@ the combinators `choose`, `wrap`, `pute` and `get` are just ordinary functions
 that return values that can be further manipulated with other combinators,
 stored in data structures and even passed through channels.
 
+See the [examples](examples) for further documentation.
+
 The book
 [Concurrent Programming in ML](http://www.cambridge.org/us/academic/subjects/computer-science/distributed-networked-and-mobile-computing/concurrent-programming-ml)
 is the most comprehensive introduction to Concurrent ML style programming.
