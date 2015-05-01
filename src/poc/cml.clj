@@ -39,31 +39,27 @@
     (throw
       (Exception.
         "Composable choice over duplicate ports is not enabled by core.async"))
-    [nacks
-     (assoc port->op port [wrappers (count port->op) prim])]))
+    [nacks (assoc port->op port [wrappers (count port->op) prim])]))
 
 (defn- add-nack [[_ port->op-before] [nacks port->op] nE]
   (let [lo (count port->op-before)
         up (count port->op)]
     [(conj nacks [lo up nE]) port->op]))
 
-(defn- get-prim [op]
-  (match op [_ _ prim] prim))
+(defn- get-prim [op] (match op [_ _ prim] prim))
 
 (defn- inst [wrappers all xE]
   (match xE
-    [:choose xEs]       (reduce (fn [all xE] (inst wrappers all xE)) all xEs)
+    [:choose xEs]       (reduce #(inst wrappers %1 %2) all xEs)
     [:wrap yE y->x]     (inst (conj wrappers y->x) all yE)
     [:guard ->xE]       (inst wrappers all (->xE))
     [:with-nack nE->xE] (let [nE (chan)]
                           (add-nack all (inst wrappers all (nE->xE nE)) nE))
     (:or [xC _] xC)     (add-op all xC wrappers xE)))
 
-(defn- instantiate [xE]
-  (inst [] [[] {}] xE))
+(defn- instantiate [xE] (inst [] [[] {}] xE))
 
-(defn- >!-forever [xC x]
-  (go (loop [] (>! xC x) (recur))))
+(defn- >!-forever [xC x] (go (loop [] (>! xC x) (recur))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -82,41 +78,40 @@
 
 (defn choose
   "Creates an event that is instantiated by instantiating all the given events
-  and synchronized by non-deterministically synchronizing upon one of them."
+  and synchronized by non-deterministically synchronizing one of them."
   ([& xEs] [:choose xEs]))
 
 (defn wrap
   "Creates an event that is instantiated and synchronized like the given event
   after which the result is passed through the given function."
-  ([xE x->y] [:wrap xE x->y]))
+  ([yE y->x] [:wrap yE y->x]))
 
 (defn guard
-  "Creates an event that is instantiated by invoking the given thunk that
-  returns an event which is then instantiated and possibly synchronized upon."
+  "Creates an event that is instantiated by invoking the given thunk that must
+  return an event which is then instantiated.  The event is synchronized by
+  synchronizing the event returned by the thunk."
   ([->xE] [:guard ->xE]))
 
 (defn with-nack
   "Creates an event that is instantiated by passing a new negative
-  acknowledgment event to the given function that returns an event which is then
-  instantiated and possibly synchronized upon.  In case the returned event will
-  not be synchronized upon, the negative acknowledgement event becomes enabled."
+  acknowledgment event to the given function that must return an event which is
+  then instantiated.  The event is synchronized by synchronizing the event
+  returned by the given function.  In case the returned event will not be
+  synchronized, the negative acknowledgment event becomes enabled."
   ([nE->xE] [:with-nack nE->xE]))
 
 (defn go-sync!
   "Starts a go block inside of which the given event is instantiated and
-  synchronized upon."
-  ([xE]
-    (go
-      (let [[nacks port->op] (instantiate xE)
-            [result port] (alts! (map get-prim (vals port->op)))
-            [wrappers i _] (get port->op port)]
-        (doseq [[lo up nE] nacks]
-          (when (or (< i lo) (<= up i))
-            (>!-forever nE i)))
-        (reduce #(%2 %1) result (rseq wrappers))))))
+  synchronized."
+  ([xE] (go (let [[nacks port->op] (instantiate xE)
+                  [result port] (alts! (map get-prim (vals port->op)))
+                  [wrappers i _] (get port->op port)]
+              (doseq [[lo up nE] nacks]
+                (when (or (< i lo) (<= up i))
+                  (>!-forever nE :nack)))
+              (reduce #(%2 %1) result (rseq wrappers))))))
 
 (defmacro sync!
   "Instantiates and synchronizes on the given event.  This must be used inside a
   `go` block."
-  ([xE]
-    `(<! (go-sync! ~xE))))
+  ([xE] `(<! (go-sync! ~xE))))
