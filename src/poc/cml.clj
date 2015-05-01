@@ -100,7 +100,7 @@
   acknowledgment event to the given function that returns an event which is then
   instantiated and possibly synchronized upon.  In case the returned event will
   not be synchronized upon, the negative acknowledgement event becomes enabled."
-  ([n->xE] [:with-nack n->xE]))
+  ([nE->xE] [:with-nack nE->xE]))
 
 (defn go-sync!
   "Starts a go block inside of which the given event is instantiated and
