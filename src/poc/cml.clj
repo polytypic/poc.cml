@@ -33,6 +33,9 @@
 (defn- instantiate [xE]
   (inst [] [[] {}] xE))
 
+(defn- >!-forever [ch x]
+  (go (loop [] (>! ch x) (recur))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pute
@@ -80,14 +83,8 @@
             [wrappers i _] (get port->op port)]
         (doseq [[lo hi nack] nacks]
           (when (or (< i lo) (<= hi i))
-            (go (loop []
-                  (>! nack i)
-                  (recur)))))
-        (loop [result result
-               wrappers wrappers]
-          (if (empty? wrappers)
-            result
-            (recur ((peek wrappers) result) (pop wrappers))))))))
+            (>!-forever nack i)))
+        (reduce #(%2 %1) result (rseq wrappers))))))
 
 (defmacro sync!
   "Instantiates and synchronizes on the given event.  This must be used inside a
