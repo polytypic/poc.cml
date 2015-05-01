@@ -1,6 +1,6 @@
 ;; Copyright (C) by Vesa Karvonen
 
-(require '[poc.cml :refer [gete pute choose wrap guard with-nack go-sync!]])
+(require '[poc.cml :refer [gete pute choose wrap guard with-nack go-sync! sync!]])
 (require '[clojure.core.async :refer [<! <!! chan go put! timeout]])
 
 ;; This is a very simple toy example that uses most of the features of CML-style
@@ -29,16 +29,16 @@
                 (wrap nack (fn [_] (println "nack") true))
               ;; Wait for 1000ms or nack.
               already-nack
-                (<! (go-sync!
-                      (choose
-                        (wrap (timeout 1000) (fn [_] false))
-                        nack)))]
+                (sync!
+                  (choose
+                    (wrap (timeout 1000) (fn [_] false))
+                    nack))]
           ;; If 1000ms passed without nack, try to reply or cancel via nack.
           (when-not already-nack
-            (<! (go-sync!
-                  (choose
-                    nack
-                    (wrap (pute reply-ch "pong") (fn [_] (println "put"))))))))
+            (sync!
+              (choose
+                nack
+                (wrap (pute reply-ch "pong") (fn [_] (println "put")))))))
         (recur)))
 
     ;; The client side event definition.

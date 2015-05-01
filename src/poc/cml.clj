@@ -2,7 +2,7 @@
 
 (ns poc.cml
   (:require
-    [clojure.core.async :refer [>! alts! chan go put!]]
+    [clojure.core.async :refer [<! >! alts! chan go put!]]
     [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,3 +94,9 @@
           (if (empty? fns)
             val
             (recur ((peek fns) val) (pop fns))))))))
+
+(defmacro sync!
+  "Instantiates and synchronizes on the given event.  This must be used inside a
+  `go` block."
+  ([xE]
+    `(<! (go-sync! ~xE))))

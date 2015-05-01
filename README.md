@@ -41,11 +41,11 @@ The plain core.async `alt!` grammar can be expressed using a just a subset of
 the combinators:
 
 ```clojure
-(<! (go-sync!
-      (choose
-        (wrap (gete <channel>)         (fn [<result>] <action>))
-        (wrap (pute <channel> <value>) (fn [<sent>] <action>))
-        ...)))
+(sync!
+  (choose
+    (wrap (gete <channel>)         (fn [<result>] <action>))
+    (wrap (pute <channel> <value>) (fn [<sent>] <action>))
+    ...))
 ```
 
 Written this way, the result is obviously slightly more verbose, and we could
