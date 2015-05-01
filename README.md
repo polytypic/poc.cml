@@ -50,7 +50,7 @@ the combinators:
 
 Written this way, the result is obviously slightly more verbose, and we could
 certainly add a bit of sugar to make it more concise, but the key here is that
-the combinators `choose`, `wrap`, `pute` and `get` are just ordinary functions
+the combinators `choose`, `wrap`, `pute` and `gete` are just ordinary functions
 that return values that can be further manipulated with other combinators,
 stored in data structures and even passed through channels.
 
