@@ -21,17 +21,12 @@
     (go
       ;; The internal asynchronous ping server loop.
       (loop []
-        (let [;; Get a ping request.
-              [nack reply-ch]
-                (<! request-ch)
-              ;; Wait for 1000ms or nack.
-              already-nack
-                (sync!
-                  nack
-                  (wrap (timeout 1000) (fn [_] false)))]
+        (let [[nack reply-ch] (<! request-ch)] ;; Get a ping request.
+          ;; Wait for 1000ms or nack.
+          (sync! nack (timeout 1000))
           ;; Then try to reply or cancel via nack.
           (sync!
-            (wrap nack (fn [_] (println "nack") true))
+            (wrap nack (fn [_] (println "nack")))
             (wrap [reply-ch "pong"] (fn [_] (println "put")))))
         (recur)))
 
