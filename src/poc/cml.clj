@@ -49,7 +49,8 @@
 (defn gete
   "Creates an event that is synchronized by taking a value on the specified
   channel.  The result of the event is the value taken or nil if the channel was
-  closed."
+  closed.  Note: `gete` is the identity function.  In other words, you can just
+  use an ordinary channels as a get event."
   ([xC] xC))
 
 (defn choose
