@@ -1,6 +1,7 @@
 # poc.cml
 
-Proof-of-Concept CML-style composable first-class events on top of core.async.
+Proof-of-Concept CML-style composable first-class events on top of
+[core.async](https://github.com/clojure/core.async/).
 
 ## Why and what is CML?
 
@@ -69,7 +70,9 @@ values that can be further manipulated with other combinators, stored in data
 structures and even passed through channels.
 
 BTW, note that `gete` and `pute` don't end with a bang `!`.  That is because all
-the effects are actually performed by `sync!`.
+the effects are actually performed by `sync!` and the values returned by the
+event combinators are immutable representations of selective synchronous
+operations.
 
 See the [examples](examples) for further documentation.
 
