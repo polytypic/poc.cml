@@ -2,6 +2,62 @@
 
 Proof-of-Concept CML-style composable first-class events on top of core.async.
 
+## Why and what is CML?
+
+Concurrent ML is concurrent programming language developed by
+[John Reppy](http://people.cs.uchicago.edu/~jhr/) in the late 1980's and early
+1990's.  It is based on ideas, namely synchronous message passing and
+non-deterministic choice, that you can find in CSP and Pi-calculus.  CML then
+extends the idea of non-deterministic choice over synchronous channel operations
+to first-class composable events with negative acknowledgments (nacks).
+
+With plain core.async, one can express a non-deterministic choice over a linear
+sequence of synchronous get and put operations:
+
+```clojure
+(alt!
+  <channel>           ([<result>] <action>) ;; get operation
+  [<channel> <value>] ([<sent>] <action>)   ;; put operation
+  ...)
+```
+
+With CML, one has the following combinators for expressing first-class events:
+
+```clojure
+(gete <channel>)             ;; An event to take a value on a channel
+(pute <channel> <value>)     ;; An event to give a value on a channel
+(choose <event> ...)         ;; Non-deterministic choice over events
+(wrap <event> <action-fn>)   ;; An event with a post synchronization action
+(guard <event-thunk>)        ;; An event with a pre synchronization action
+(with-nack <nack->event-fn>) ;; An event with a pre sync action given a nack
+```
+
+Compared to plain core.async, non-deterministic choices can be easily nested and
+actions can be attached both before and after synchronization.  Furthermore,
+there is a combinator that provides negative acknowledgment in case an event
+wasn't ultimately chosen.
+
+The plain core.async `alt!` grammar can be expressed using a just a subset of
+the combinators:
+
+```clojure
+(<! (go-sync!
+      (choose
+        (wrap (gete <channel>)         (fn [<result>] <action>))
+        (wrap (pute <channel> <value>) (fn [<sent>] <action>))
+        ...)))
+```
+
+Written this way, the result is obviously slightly more verbose, and we could
+certainly add a bit of sugar to make it more concise, but the key here is that
+the combinators `choose`, `wrap`, `pute` and `get` are just ordinary functions
+that return values that can be further manipulated with other combinators,
+stored in data structures and even passed through channels.
+
+The book
+[Concurrent Programming in ML](http://www.cambridge.org/us/academic/subjects/computer-science/distributed-networked-and-mobile-computing/concurrent-programming-ml)
+is the most comprehensive introduction to Concurrent ML style programming.
+
 ## License
 
 Copyright © 2015 Vesa Karvonen
