@@ -37,8 +37,8 @@ actions can be attached both before and after synchronization.  Furthermore,
 there is a combinator that provides negative acknowledgment in case an event
 wasn't ultimately chosen.
 
-The plain core.async `alt!` grammar can be expressed using a just a subset of
-the combinators:
+The plain core.async `alt!` grammar can be expressed using just a subset of the
+combinators
 
 ```clojure
 (sync!
@@ -48,11 +48,14 @@ the combinators:
     ...))
 ```
 
-Written this way, the result is obviously slightly more verbose, and we could
-certainly add a bit of sugar to make it more concise, but the key here is that
-the combinators `choose`, `wrap`, `pute` and `gete` are just ordinary functions
-that return values that can be further manipulated with other combinators,
-stored in data structures and even passed through channels.
+where `sync!` is an operation that synchronizes on a given event and returns its
+result.
+
+Written this way, the expression is obviously slightly more verbose, and we
+could certainly add a bit of sugar to make it more concise, but the key here is
+that the combinators `choose`, `wrap`, `pute` and `gete` are just ordinary
+functions that return values that can be further manipulated with other
+combinators, stored in data structures and even passed through channels.
 
 See the [examples](examples) for further documentation.
 
