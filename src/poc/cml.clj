@@ -7,36 +7,31 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- add-op [all port stack op]
-  (match all
-    [all-nacks all-ops]
-      (if (contains? all-ops port)
-        (throw (Exception. "Composable choice over duplicate ports is not enabled by core.async"))
-        [all-nacks
-         (assoc all-ops port (conj (conj stack (count all-ops)) op))])))
+(defn- add-op [[nacks port->op] port wrappers prim]
+  (if (contains? port->op port)
+    (throw (Exception. "Composable choice over duplicate ports is not enabled by core.async"))
+    [nacks
+     (assoc port->op port [wrappers (count port->op) prim])]))
 
-(defn- add-nack [all-bef all nack]
-  (match all-bef
-    [_ ops-bef]
-      (match all
-        [all-nacks all-ops]
-          [(conj all-nacks [(count ops-bef) (count all-ops) nack])
-           all-ops])))
+(defn- add-nack [[_ port->op-before] [nacks port->op] nack]
+  (let [lo (count port->op-before)
+        hi (count port->op)]
+    [(conj nacks [lo hi nack]) port->op]))
 
-(defn- count-ops [all]
-  (match all
-    [_ all-ops] (count all-ops)))
+(defn- get-prim [op]
+  (match op [_ _ prim] prim))
 
-(defn- inst [stack all xE]
+(defn- inst [wrappers all xE]
   (match xE
-    [:choose xEs]         (reduce (fn [all xE] (inst stack all xE)) all xEs)
-    [:wrap yE y->x]       (inst (conj stack y->x) all yE)
-    [:guard ->xE]         (inst stack all (->xE))
+    [:choose xEs]         (reduce (fn [all xE] (inst wrappers all xE)) all xEs)
+    [:wrap yE y->x]       (inst (conj wrappers y->x) all yE)
+    [:guard ->xE]         (inst wrappers all (->xE))
     [:with-nack nack->xE] (let [nack (chan)]
-                            (add-nack all (inst stack all (nack->xE nack)) nack))
-    (:or [xC _] xC)       (add-op all xC stack xE)))
+                            (add-nack all (inst wrappers all (nack->xE nack)) nack))
+    (:or [xC _] xC)       (add-op all xC wrappers xE)))
 
-(defn- instantiate [xE] (inst [] [[] {}] xE))
+(defn- instantiate [xE]
+  (inst [] [[] {}] xE))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -80,20 +75,19 @@
   synchronized upon."
   ([xE]
     (go
-      (let [[nacks ops] (instantiate xE)
-            [val port] (alts! (into [] (map peek (vals ops))))
-            stack (pop (get ops port))
-            i (peek stack)]
+      (let [[nacks port->op] (instantiate xE)
+            [result port] (alts! (map get-prim (vals port->op)))
+            [wrappers i _] (get port->op port)]
         (doseq [[lo hi nack] nacks]
           (when (or (< i lo) (<= hi i))
             (go (loop []
                   (>! nack i)
                   (recur)))))
-        (loop [val val
-               fns (pop stack)]
-          (if (empty? fns)
-            val
-            (recur ((peek fns) val) (pop fns))))))))
+        (loop [result result
+               wrappers wrappers]
+          (if (empty? wrappers)
+            result
+            (recur ((peek wrappers) result) (pop wrappers))))))))
 
 (defmacro sync!
   "Instantiates and synchronizes on the given event.  This must be used inside a
