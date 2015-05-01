@@ -27,7 +27,7 @@
 ;; primitive operations corresponding to the event and `nC` is a channel that
 ;; serves as the event.  After synchronizing on a primitive operation, the
 ;; vector of nacks is processed and all nacks whose range is outside of the
-;; index of the chosen primitive event are enabled.
+;; index of the chosen primitive operation are enabled.
 ;;
 ;; Finally, after nacks have been enabled, the wrappers are executed to produce
 ;; the final result.
@@ -66,14 +66,13 @@
 (defn pute
   "Creates an event that is synchronized by giving a value on the specified
   channel.  The result of the event is true if a value was given and false if
-  the channel was closed."
+  the channel was closed.  Note: `(pute xC x) = [xC x]`."
   ([xC x] [xC x]))
 
 (defn gete
   "Creates an event that is synchronized by taking a value on the specified
   channel.  The result of the event is the value taken or nil if the channel was
-  closed.  Note: `gete` is the identity function.  In other words, you can just
-  use an ordinary channels as a get event."
+  closed.  Note: `(gete xC) = xC`."
   ([xC] xC))
 
 (defn choose

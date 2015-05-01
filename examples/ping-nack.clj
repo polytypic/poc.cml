@@ -34,7 +34,7 @@
           (sync!
             (choose
               (wrap nack (fn [_] (println "nack") true))
-              (wrap (pute reply-ch "pong") (fn [_] (println "put"))))))
+              (wrap [reply-ch "pong"] (fn [_] (println "put"))))))
         (recur)))
 
     ;; The client side event definition.

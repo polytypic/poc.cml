@@ -25,7 +25,9 @@ With CML, one has the following combinators for expressing first-class events:
 
 ```clojure
 (gete <channel>)             ;; An event to take a value on a channel
+      <channel>              ;;   and alternative syntax for gete
 (pute <channel> <value>)     ;; An event to give a value on a channel
+     [<channel> <value>]     ;;   and alternative syntax for pute
 (choose <event> ...)         ;; Non-deterministic choice over events
 (wrap <event> <action-fn>)   ;; An event with a post synchronization action
 (guard <event-thunk>)        ;; An event with a pre synchronization action
@@ -43,8 +45,8 @@ combinators
 ```clojure
 (sync!
   (choose
-    (wrap (gete <channel>)         (fn [<result>] <action>))
-    (wrap (pute <channel> <value>) (fn [<sent>] <action>))
+    (wrap <channel>           (fn [<result>] <action>))
+    (wrap [<channel> <value>] (fn [<sent>] <action>))
     ...))
 ```
 
