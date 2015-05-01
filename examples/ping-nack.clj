@@ -24,21 +24,17 @@
         (let [;; Get a ping request.
               [nack reply-ch]
                 (<! request-ch)
-              ;; Just wrap the nack event to print a diagnostic.
-              nack
-                (wrap nack (fn [_] (println "nack") true))
               ;; Wait for 1000ms or nack.
               already-nack
                 (sync!
                   (choose
-                    (wrap (timeout 1000) (fn [_] false))
-                    nack))]
-          ;; If 1000ms passed without nack, try to reply or cancel via nack.
-          (when-not already-nack
-            (sync!
-              (choose
-                nack
-                (wrap (pute reply-ch "pong") (fn [_] (println "put")))))))
+                    nack
+                    (wrap (timeout 1000) (fn [_] false))))]
+          ;; Then try to reply or cancel via nack.
+          (sync!
+            (choose
+              (wrap nack (fn [_] (println "nack") true))
+              (wrap (pute reply-ch "pong") (fn [_] (println "put"))))))
         (recur)))
 
     ;; The client side event definition.
