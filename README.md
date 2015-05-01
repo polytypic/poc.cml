@@ -60,6 +60,16 @@ The book
 [Concurrent Programming in ML](http://www.cambridge.org/us/academic/subjects/computer-science/distributed-networked-and-mobile-computing/concurrent-programming-ml)
 is the most comprehensive introduction to Concurrent ML style programming.
 
+## Next steps
+
+What is interesting is that CML style events do not require significantly more
+complicated machinery than what core.async already provides.  This
+proof-of-concept library hopefully makes that clear.  For production use, you'd
+want to implement the CML mechanisms directly.  Also note the one exception
+raised in the implemention [here](src/poc/cml.clj#L14).  The `alts!` operation
+of core.async does not make it possible to distinguish between multiple
+different operations on a single channel, which breaks composability.
+
 ## License
 
 Copyright © 2015 Vesa Karvonen
