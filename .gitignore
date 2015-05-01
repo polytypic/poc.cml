@@ -1,4 +1,5 @@
-target
-.DS_Store
 *~
+.DS_Store
 .lein-repl-history
+.nrepl-port
+target
