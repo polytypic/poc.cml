@@ -1,5 +1,5 @@
 (defproject nonsync "0.1.0-SNAPSHOT"
-  :description "Proof-of-Concept CML-style events on top of core.async"
+  :description "Proof-of-Concept CML-style composable first-class events on top of core.async."
   :url "https://github.com/VesaKarvonen/poc.cml"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

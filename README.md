@@ -1,6 +1,6 @@
 # poc.cml
 
-Proof-of-Concept CML-style events on top of core.async.
+Proof-of-Concept CML-style composable first-class events on top of core.async.
 
 ## License
 
