@@ -5,7 +5,7 @@ Proof-of-Concept CML-style composable first-class events on top of
 
 ## Why and what is CML?
 
-Concurrent ML is concurrent programming language developed by
+Concurrent ML is a concurrent programming language developed by
 [John Reppy](http://people.cs.uchicago.edu/~jhr/) in the late 1980's and early
 1990's.  It is based on ideas, namely synchronous message passing and
 non-deterministic choice, that you can find in
