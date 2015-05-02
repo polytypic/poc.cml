@@ -2,7 +2,7 @@
 
 (ns poc.cml
   (:require
-    [clojure.core.async :refer [<! >! alts! chan go put!]]
+    [clojure.core.async :refer [<! <!! >! alts! chan go put!]]
     [clojure.core.match :refer [match]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -57,8 +57,6 @@
                           (add-nack all (inst wrappers all (nE->xE nE)) nE))
     (:or [xC _] xC)     (add-op all xC wrappers xE)))
 
-(defn- instantiate [xE] (inst [] [[] {}] xE))
-
 (defn- >!-forever [xC x] (go (loop [] (>! xC x) (recur))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,7 +101,7 @@
 (defn go-sync!
   "Starts a go block inside of which the given events are instantiated and
   non-deterministically at most one of them is synchronized."
-  ([xE] (go (let [[nacks port->op] (instantiate xE)
+  ([xE] (go (let [[nacks port->op] (inst [] [[] {}] xE)
                   [result port] (alts! (map op->prim (vals port->op)))
                   [wrappers i _] (get port->op port)]
               (doseq [[lo up nE] nacks]
@@ -112,7 +110,14 @@
               (reduce #(%2 %1) result (rseq wrappers)))))
   ([xE & xEs] (go-sync! (apply choose xE xEs))))
 
+(defn syncs!
+  "Instantiates the given events and non-deterministically synchronizes at most
+  one of them.  Blocks until synchronized.  This must not be used inside a `go`
+  block."
+  ([xE & xEs] (<!! (apply go-sync! xE xEs))))
+
 (defmacro sync!
   "Instantiates the given events and non-deterministically synchronizes at most
-  one of them.  This must be used inside a `go` block."
+  one of them.  Parks until synchronized.  This must be used inside a `go`
+  block."
   ([xE & xEs] `(<! (go-sync! ~xE ~@xEs))))

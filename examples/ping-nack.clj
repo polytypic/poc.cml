@@ -1,6 +1,6 @@
 ;; Copyright (C) by Vesa Karvonen
 
-(require '[poc.cml :refer [gete pute choose wrap guard with-nack go-sync! sync!]])
+(require '[poc.cml :refer [wrap with-nack sync! syncs!]])
 (require '[clojure.core.async :refer [<! <!! chan go put! timeout]])
 
 ;; This is a very simple toy example that uses most of the features of CML-style
@@ -41,12 +41,12 @@
 
 ;; First we try to get a ping within 500ms.
 (println
-  (<!! (go-sync!
-         ping
-         (wrap (timeout 500) (fn [_] "timeout 500")))))
+  (syncs!
+    ping
+    (wrap (timeout 500) (fn [_] "timeout 500"))))
 
 ;; Then we try to get a ping within 1500ms.
 (println
-  (<!! (go-sync!
-         ping
-         (wrap (timeout 1500) (fn [_] "timeout 1500")))))
+  (syncs!
+    ping
+    (wrap (timeout 1500) (fn [_] "timeout 1500"))))
