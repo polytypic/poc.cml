@@ -104,9 +104,9 @@
   ([xE] (go (let [[nacks port->op] (inst [] [[] {}] xE)
                   [result port] (alts! (map op->prim (vals port->op)))
                   [wrappers i _] (get port->op port)]
-              (doseq [[lo up nE] nacks]
+              (doseq [[lo up nC] nacks]
                 (when (or (< i lo) (<= up i))
-                  (>!-forever nE :nack)))
+                  (>!-forever nC :nack)))
               (reduce #(%2 %1) result (rseq wrappers)))))
   ([xE & xEs] (go-sync! (apply choose xE xEs))))
 
