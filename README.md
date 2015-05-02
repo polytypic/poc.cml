@@ -8,9 +8,11 @@ Proof-of-Concept CML-style composable first-class events on top of
 Concurrent ML is concurrent programming language developed by
 [John Reppy](http://people.cs.uchicago.edu/~jhr/) in the late 1980's and early
 1990's.  It is based on ideas, namely synchronous message passing and
-non-deterministic choice, that you can find in CSP and Pi-calculus.  CML then
-extends the idea of non-deterministic choice over synchronous channel operations
-to first-class composable events with negative acknowledgments (nacks).
+non-deterministic choice, that you can find in
+[CSP](http://en.wikipedia.org/wiki/Communicating_sequential_processes) and
+[Pi-calculus](http://en.wikipedia.org/wiki/%CE%A0-calculus).  CML then extends
+the idea of non-deterministic choice over synchronous channel operations to
+first-class composable events with negative acknowledgments (nacks).
 
 With plain core.async, one can express a non-deterministic choice over a linear
 sequence of synchronous get and put operations:
@@ -22,7 +24,8 @@ sequence of synchronous get and put operations:
   ...)
 ```
 
-With CML, one has the following combinators for expressing first-class events:
+With CML, one has the following combinators (and more) for expressing
+first-class events:
 
 ```clojure
 (gete <channel>)             ;; An event to take a value on a channel
@@ -62,12 +65,12 @@ be dropped, and we can also use the alternative syntax for `gete` and `pute`:
     ...)
 ```
 
-Written this way, the `sync!` expression is obviously slightly more verbose than
-the `alt!` expression, and we could certainly add further sugar to make the
-`sync!` version slightly more concise, but the key here is that the combinators
-`choose`, `wrap`, `pute` and `gete` are just ordinary functions that return
-values that can be further manipulated with other combinators, stored in data
-structures and even passed through channels.
+Written this way, the `sync!` expression is just slightly more verbose than the
+`alt!` expression, and we could certainly add further sugar to make the `sync!`
+version more concise, but the key here is that the combinators `choose`, `wrap`,
+`pute` and `gete` are just ordinary functions that return values that can be
+further manipulated with other combinators, stored in data structures and even
+passed through channels.
 
 BTW, note that `gete` and `pute` don't end with a bang `!`.  That is because all
 the effects are actually performed by `sync!` and the values returned by the
