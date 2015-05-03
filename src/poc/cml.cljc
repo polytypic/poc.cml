@@ -57,13 +57,13 @@
     [:choose xEs]       (reduce #(inst wrappers %1 %2) all xEs)
     [:wrap yE y->x]     (inst (conj wrappers y->x) all yE)
     [:guard ->xE]       (inst wrappers all (->xE))
-    [:with-nack nE->xE] (let [nC (chan)]
+    [:with-nack nE->xE] (let [nC (chan)] ;; XXX use promise-chan
                           (add-nack all (inst wrappers all (nE->xE nC)) nC))
     (:or [xC _] xC)     (add-op all xC wrappers xE)))
 
 (defn- >!-forever [xC x] (go (loop [] (>! xC x) (recur))))
 
-;; Core combinators ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Primitive combinators ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pute
   "Creates an event that is synchronized by giving a value on the specified
