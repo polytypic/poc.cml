@@ -89,7 +89,7 @@ What is interesting is that CML style events do not require significantly more
 complicated machinery than what core.async already provides.  This
 proof-of-concept library hopefully makes that clear.  For production use, you'd
 want to implement the CML mechanisms directly.  Also note the one exception
-raised in the implemention [here](src/poc/cml.clj#L41).  The `alts!` operation
+raised in the implemention [here](src/poc/cml.cljc#L45).  The `alts!` operation
 of core.async does not make it possible to distinguish between multiple
 different operations on a single channel, which breaks composability.
 
