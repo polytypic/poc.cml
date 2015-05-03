@@ -1,9 +1,13 @@
 ;; Copyright (C) by Vesa Karvonen
 
 (ns poc.cml
-  (:require
-    [clojure.core.async :refer [<! <!! >! alts! chan go put!]]
-    [clojure.core.match :refer [match]]))
+  #?@(:clj  [(:require
+               [clojure.core.async :refer [<! <!! >! alts! chan go put!]]
+               [clojure.core.match :refer [match]])]
+      :cljs [(:require-macros
+               [cljs.core.match :refer [match]])
+             (:require
+               [cljs.core.async :refer [<! >! alts! chan go put!]])]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -32,19 +36,19 @@
 ;; Finally, after nacks have been enabled, the wrappers are executed to produce
 ;; the final result.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Internal implementation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- add-op [[nacks port->op] port wrappers prim]
   (if (contains? port->op port)
     (throw
-      (Exception.
+      (#?(:clj Exception. :cljs js/Error.)
         "Composable choice over duplicate ports is not enabled by core.async"))
     [nacks (assoc port->op port [wrappers (count port->op) prim])]))
 
-(defn- add-nack [[_ port->op-before] [nacks port->op] nE]
+(defn- add-nack [[_ port->op-before] [nacks port->op] nC]
   (let [lo (count port->op-before)
         up (count port->op)]
-    [(conj nacks [lo up nE]) port->op]))
+    [(conj nacks [lo up nC]) port->op]))
 
 (defn- op->prim [[_ _ prim]] prim)
 
@@ -53,13 +57,13 @@
     [:choose xEs]       (reduce #(inst wrappers %1 %2) all xEs)
     [:wrap yE y->x]     (inst (conj wrappers y->x) all yE)
     [:guard ->xE]       (inst wrappers all (->xE))
-    [:with-nack nE->xE] (let [nE (chan)]
-                          (add-nack all (inst wrappers all (nE->xE nE)) nE))
+    [:with-nack nE->xE] (let [nC (chan)]
+                          (add-nack all (inst wrappers all (nE->xE nC)) nC))
     (:or [xC _] xC)     (add-op all xC wrappers xE)))
 
 (defn- >!-forever [xC x] (go (loop [] (>! xC x) (recur))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Core combinators ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn pute
   "Creates an event that is synchronized by giving a value on the specified
@@ -98,26 +102,31 @@
   synchronized, the negative acknowledgment event becomes enabled."
   ([nE->xE] [:with-nack nE->xE]))
 
+;; Synchronization ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn go-sync!
   "Starts a go block inside of which the given events are instantiated and
   non-deterministically at most one of them is synchronized."
   ([xE] (go (let [[nacks port->op] (inst [] [[] {}] xE)
                   [result port] (alts! (map op->prim (vals port->op)))
-                  [wrappers i _] (get port->op port)]
+                  [wrappers i _] (port->op port)]
               (doseq [[lo up nC] nacks]
                 (when (or (< i lo) (<= up i))
                   (>!-forever nC :nack)))
               (reduce #(%2 %1) result (rseq wrappers)))))
   ([xE & xEs] (go-sync! (apply choose xE xEs))))
 
+;; Convenience ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+#?(:clj
+
 (defn syncs!
   "Instantiates the given events and non-deterministically synchronizes at most
   one of them.  Blocks until synchronized.  This must not be used inside a `go`
-  block."
+  block and is not supported in ClojureScript."
   ([xE & xEs] (<!! (apply go-sync! xE xEs))))
 
-(defmacro sync!
-  "Instantiates the given events and non-deterministically synchronizes at most
-  one of them.  Parks until synchronized.  This must be used inside a `go`
-  block."
-  ([xE & xEs] `(<! (go-sync! ~xE ~@xEs))))
+)
+
+;; Additional combinators ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+

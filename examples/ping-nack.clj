@@ -1,6 +1,7 @@
 ;; Copyright (C) by Vesa Karvonen
 
-(require '[poc.cml :refer [wrap with-nack sync! syncs!]])
+(require '[poc.cml :refer [wrap with-nack syncs!]])
+(require '[poc.cml.macros :refer [sync!]])
 (require '[clojure.core.async :refer [<! <!! chan go put! timeout]])
 
 ;; This is a very simple toy example that uses most of the features of CML-style
