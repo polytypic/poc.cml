@@ -91,7 +91,9 @@
 (defn guard
   "Creates an event that is instantiated by invoking the given thunk that must
   return an event which is then instantiated.  The event is synchronized by
-  synchronizing the event returned by the thunk."
+  synchronizing the event returned by the thunk.  Note that `(guard ->xE)` is
+  equivalent to `(with-nack (fn [_] (->xE)))`, but `guard` can be implemented
+  more efficiently."
   ([->xE] [:guard ->xE]))
 
 (defn with-nack
