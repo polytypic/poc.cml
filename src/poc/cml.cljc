@@ -128,5 +128,27 @@
 
 )
 
-;; Additional combinators ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Derived combinators ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn once "An event that is enabled once with the given value."
+  ([x] (let [xC (chan)]
+         (put! xC x)
+         xC)))
+
+(defn always "An event that is always enabled with given value."
+  ([x] (let [xC (chan)] ;; XXX use promise-chan
+         (>!-forever xC x)
+         xC)))
+
+(def never ^{:doc "An event that is never enabled."}
+  (chan))
+
+(defn wrap-abort
+  "Creates an event that is instantiated and synchronized like the given event
+  except that if the event is instantiated, but not synchronized, the given
+  action will be executed in a separate `go` thread."
+  ([xE action]
+    (with-nack
+      (fn [nE]
+        (go-sync! (wrap nE (fn [_] (action))))
+        xE))))
