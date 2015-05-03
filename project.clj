@@ -1,4 +1,4 @@
-(defproject poc.cml "0.1.0-SNAPSHOT2"
+(defproject poc.cml "0.1.0-SNAPSHOT3"
   :description "Proof-of-Concept CML-style composable first-class events on top of core.async."
   :url "https://github.com/VesaKarvonen/poc.cml"
   :license {:name "Eclipse Public License"

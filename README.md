@@ -3,6 +3,14 @@
 Proof-of-Concept CML-style composable first-class events on top of
 [core.async](https://github.com/clojure/core.async/).
 
+Leiningen dependency information:
+
+```clj
+[org.clojure/clojure "1.7.0-beta2"]
+[org.clojure/core.async "0.1.346.0-17112a-alpha"]
+[poc.cml "0.1.0-SNAPSHOT3"]
+```
+
 ## Why and what is CML?
 
 Concurrent ML is a concurrent programming language developed by
@@ -62,7 +70,7 @@ be dropped, and we can also use the alternative syntax for `gete` and `pute`:
 (sync!
   (wrap <channel>           (fn [<result>] <action>))
   (wrap [<channel> <value>] (fn [<sent>] <action>))
-    ...)
+  ...)
 ```
 
 Written this way, the `sync!` expression is just slightly more verbose than the
