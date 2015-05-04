@@ -1,19 +1,9 @@
+[![Clojars Project](http://clojars.org/poc.cml/latest-version.svg)](http://clojars.org/poc.cml)
+
 # poc.cml
 
 Proof-of-Concept CML-style composable first-class events on top of
 [core.async](https://github.com/clojure/core.async/).
-
-Leiningen dependency information:
-
-[![Clojars Project](http://clojars.org/poc.cml/latest-version.svg)](http://clojars.org/poc.cml)
-
-The `poc.cml` library itself requires:
-
-```clj
-[org.clojure/clojure "1.7.0-beta2"]
-[org.clojure/clojurescript "0.0-3211"] ;; if you use cljs
-[org.clojure/core.async "0.1.346.0-17112a-alpha"]
-```
 
 ## Why and what is CML?
 
