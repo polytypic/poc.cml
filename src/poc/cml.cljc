@@ -5,9 +5,10 @@
                [clojure.core.async :refer [<! <!! >! alts! chan go put!]]
                [clojure.core.match :refer [match]])]
       :cljs [(:require-macros
+               [cljs.core.async.macros :refer [go]]
                [cljs.core.match :refer [match]])
              (:require
-               [cljs.core.async :refer [<! >! alts! chan go put!]])]))
+               [cljs.core.async :refer [<! >! alts! chan put!]])]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
