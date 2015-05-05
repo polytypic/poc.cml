@@ -1,18 +1,11 @@
 ;; Copyright (C) by Vesa Karvonen
 
 (ns poc.cml.sem
-  #?@(:clj  [(:require
-               [clojure.core.async :refer [chan go put!]]
-               [poc.cml.macros :refer [sync!]])]
-      :cljs [(:require-macros
-               [cljs.core.macros :refer [go]]
-               [poc.cml.macros :refer [sync!]])
-             (:require
-               [cljs.core.async :refer [chan put!]])])
-  (:require [poc.cml :refer [choose wrap]]))
-
-(defn- on [xE y]
-  (wrap xE (fn [_] y)))
+  (#?(:clj :require :cljs :require-macros)
+    [poc.cml.macros :refer [go sync!]])
+  (:require
+    [poc.cml :refer [choose wrap]]
+    [poc.cml.util :refer [chan on put!]]))
 
 (defn create
   ([n]

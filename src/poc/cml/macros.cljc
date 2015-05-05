@@ -2,9 +2,10 @@
 
 (ns poc.cml.macros
   #?@(:clj  [(:require
-               [clojure.core.async :refer [<!]]
+               [clojure.core.async :as async :refer [<!]]
                [clojure.core.match :refer [match]])]
       :cljs [(:require-macros
+               [cljs.core.async.macros :as async]
                [cljs.core.match :refer [match]])
              (:require
                [cljs.core.async :refer [<!]])])
@@ -12,6 +13,11 @@
     [poc.cml :as cml]))
 
 ;; Convenience ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro go
+  "Alias for core.async `go`."
+  ([first & rest]
+    `(async/go ~first ~@rest)))
 
 (defmacro sync!
   "Instantiates the given events and non-deterministically synchronizes at most

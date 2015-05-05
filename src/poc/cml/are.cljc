@@ -1,9 +1,9 @@
 ;; Copyright (C) by Vesa Karvonen
 
 (ns poc.cml.are
-  #?@(:clj  [(:require [clojure.core.async :refer [chan put!]])]
-      :cljs [(:require [cljs.core.async    :refer [chan put!]])])
-  (:require [poc.cml :refer [choose wrap]]))
+  (:require
+    [poc.cml :refer [choose wrap]]
+    [poc.cml.util :refer [chan put! transfer]]))
 
 (defn create
   ([set?]
@@ -14,10 +14,8 @@
 
 (defn signal
   ([[set unset]]
-    (wrap (choose set unset)
-      (fn [v] (put! set v)))))
+    (transfer (choose set unset) set)))
 
 (defn wait
   ([[set unset]]
-    (wrap set
-      (fn [v] (put! unset v)))))
+    (transfer set unset)))
